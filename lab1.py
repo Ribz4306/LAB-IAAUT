@@ -19,21 +19,28 @@ def kminit(X, K, flag):
 # A inicializa¸c~ao do primeiro centr´oide ´e fixa
     N = X.shape[0]
     C = []
-    init_centr= X[np.random.randint(N)]
-    C.append(init_centr)    
+    init_centr_idx= np.random.randint(N)
+    C.append(X[init_centr_idx])    
     if flag == 0:
         idx = np.random.choice(N, K - 1, replace=False)
-        while init_centr in idx: # caso raro --> repetiu o primeiro
+        while init_centr_idx in idx: # caso raro --> repetiu o primeiro
             idx = np.random.choice(N, K - 1, replace=False)
         C.extend(X[idx])
 
     else: # k-means++
         # TODO: complete o c´odigo para inicializar os K-1 centr´oides de acordo com a flag
         pass
-    return C
+    return np.array(C)
 
 def kmeans_custo(X, C, s):
 #Calcula a fun¸c~ao de custo do k-means
+    centr_point = C[s]
+
+    # distância eucladiana de cada pose ao seu centroide: (N,)
+    dist2 = np.sum((X - centr_point)**2, axis=1)
+
+    # custo total: um único número
+    return dist2
 
 # TODO: calcule a fun¸c~ao de custo
     return
@@ -43,6 +50,10 @@ def kmeans(X, K, flag):
 
     #TODO: Implemente o algoritmo do k-means, com um crit´erio de paragem apropriado.
     #Use as fun¸c~oes definidas acima
+
+    total_cost= kmeans_custo(X_norm,C, s).sum()
     return
 
 C = kminit(X_norm, 3, 0)
+s = np.random.randint(3, size=X_norm.shape[0])   # atribuições ao calhas
+print(kmeans_custo(X_norm, C, s))
