@@ -36,24 +36,39 @@ def kmeans_custo(X, C, s):
 #Calcula a fun¸c~ao de custo do k-means
     centr_point = C[s]
 
-    # distância eucladiana de cada pose ao seu centroide: (N,)
-    dist2 = np.sum((X - centr_point)**2, axis=1)
+    # distância euclidiana de cada pose ao seu centroide: (N,)
+    dist_eucl = np.sum((X - centr_point)**2, axis=1)
 
-    # custo total: um único número
-    return dist2
+    total_cost= np.sum(dist_eucl)
 
-# TODO: calcule a fun¸c~ao de custo
-    return
+    return total_cost
 
 def kmeans(X, K, flag):
     #Aplica o algoritm k-means `a matriz de dados X.
+    C = kminit(X,K,flag)
+    prev_cost = np.inf
 
-    #TODO: Implemente o algoritmo do k-means, com um crit´erio de paragem apropriado.
-    #Use as fun¸c~oes definidas acima
+    N = X.shape[0]
+    K = C.shape[0]
 
-    total_cost= kmeans_custo(X_norm,C, s).sum()
-    return
+    M = np.zeros((N, K))
 
-C = kminit(X_norm, 3, 0)
-s = np.random.randint(3, size=X_norm.shape[0])   # atribuições ao calhas
-print(kmeans_custo(X_norm, C, s))
+    for k in range(K):
+        M[:, k] = np.sum((X-C[k])**2, axis=1)   # distância ao quadrado de cada pose ao centroide k: (N,)
+
+    s = np.argmin(M, axis=1)               # para cada pose, o centroide mais próximo
+
+    total_cost = kmeans_custo(X,C,s)
+
+    # Comparação dos custos    
+    if prev_cost - total_cost < 1e-6:
+        return C, s
+    prev_cost = total_cost
+
+    # Atualização dos centroides
+    for k in range(K):
+        poses_do_cluster = X[s == k]
+        if len(poses_do_cluster) > 0:
+            C[k] = np.mean(poses_do_cluster, axis=0)
+
+    return C, s
