@@ -47,28 +47,31 @@ def kmeans(X, K, flag):
     #Aplica o algoritm k-means `a matriz de dados X.
     C = kminit(X,K,flag)
     prev_cost = np.inf
-
     N = X.shape[0]
-    K = C.shape[0]
 
-    M = np.zeros((N, K))
+    while True:
+        M = np.zeros((N, K))
 
-    for k in range(K):
-        M[:, k] = np.sum((X-C[k])**2, axis=1)   # distância ao quadrado de cada pose ao centroide k: (N,)
+        for k in range(K):
+            M[:, k] = np.sum((X - C[k])**2, axis=1)     # distância ao quadrado de cada pose ao centroide k: (N,)
 
-    s = np.argmin(M, axis=1)               # para cada pose, o centroide mais próximo
+        s = np.argmin(M, axis=1)                        # para cada pose, o centroide mais próximo
 
-    total_cost = kmeans_custo(X,C,s)
+        total_cost = kmeans_custo(X, C, s)
 
-    # Comparação dos custos    
-    if prev_cost - total_cost < 1e-6:
-        return C, s
-    prev_cost = total_cost
+        # Comparacao dos custos
+        if prev_cost - total_cost < 1e-6:
+            break
+        prev_cost = total_cost
 
-    # Atualização dos centroides
-    for k in range(K):
-        poses_do_cluster = X[s == k]
-        if len(poses_do_cluster) > 0:
-            C[k] = np.mean(poses_do_cluster, axis=0)
+        # Atualizacao dos centroides
+        for k in range(K):
+            cluster = X[s == k]
+            if len(cluster) > 0:
+                C[k] = np.mean(cluster, axis=0)
 
     return C, s
+
+
+C, s = kmeans(X_norm, 3, 0)
+print(np.bincount(s))
