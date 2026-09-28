@@ -1,7 +1,7 @@
 import numpy as np
 import pandas as pd
 from sklearn.preprocessing import StandardScaler
-# N~AO MODIFICAR A SEED
+# NAO MODIFICAR A SEED
 # flag = 0 --> random
 # flag = 1 --> km++
 np.random.seed(555)
@@ -10,13 +10,11 @@ df_train = pd.read_pickle('Xtrain.pkl')
 
 X = np.concatenate(df_train['Skeleton_Sequence'].to_numpy())
 
-#Normaliza¸c~ao dos dados - centrar + escalamento (recomendando e cr´ıtico para o PCA)
+#Normalizaçao dos dados - centrar + escalamento (recomendando e crıtico para o PCA)
 scaler = StandardScaler()
 X_norm = scaler.fit_transform(X)
 
 def kminit(X, K, flag):
-#Inicializa¸c~ao - pode ser aleat´oria ou recorrendo ao k-means++
-# A inicializa¸c~ao do primeiro centr´oide ´e fixa
     N = X.shape[0]
     C = []
     init_centr_idx= np.random.randint(N)
@@ -28,9 +26,8 @@ def kminit(X, K, flag):
         C.extend(X[idx])
 
     else: # k-means++
-        # TODO: complete o c´odigo para inicializar os K-1 centr´oides de acordo com a flag
         for _ in range(K - 1):
-            C_atual = np.array(C)                  # centroides escolhidos até agora
+            C_atual = np.array(C)                  
             M = np.zeros((N, len(C_atual)))
 
             # distância ao quadrado de cada pose a cada centroide já escolhido
@@ -49,7 +46,6 @@ def kminit(X, K, flag):
     return np.array(C)
 
 def kmeans_custo(X, C, s):
-#Calcula a fun¸c~ao de custo do k-means
     centr_point = C[s]
 
     # distância euclidiana de cada pose ao seu centroide: (N,)
@@ -60,7 +56,7 @@ def kmeans_custo(X, C, s):
     return total_cost
 
 def kmeans(X, K, flag):
-    #Aplica o algoritm k-means `a matriz de dados X.
+    # Aplica o algoritm k-means a matriz de dados X.
     C = kminit(X,K,flag)
     prev_cost = np.inf
     N = X.shape[0]
@@ -88,6 +84,6 @@ def kmeans(X, K, flag):
 
     return C, s
 
-
+# RUN
 C, s = kmeans(X_norm, 3, 0)
 print(np.bincount(s))
