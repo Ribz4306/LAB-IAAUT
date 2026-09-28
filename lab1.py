@@ -29,7 +29,23 @@ def kminit(X, K, flag):
 
     else: # k-means++
         # TODO: complete o c´odigo para inicializar os K-1 centr´oides de acordo com a flag
-        pass
+        for _ in range(K - 1):
+            C_atual = np.array(C)                  # centroides escolhidos até agora
+            M = np.zeros((N, len(C_atual)))
+
+            # distância ao quadrado de cada pose a cada centroide já escolhido
+            for k in range(len(C_atual)):
+                M[:, k] = np.sum((X - C_atual[k])**2, axis=1)
+
+            # distância de cada pose ao centroide MAIS PRÓXIMO: (N,)
+            d2 = np.min(M, axis=1)
+
+            # probabilidade
+            prob = d2 / np.sum(d2)
+
+            new_idx = np.random.choice(N, p=prob)
+            C.append(X[new_idx])
+                
     return np.array(C)
 
 def kmeans_custo(X, C, s):
