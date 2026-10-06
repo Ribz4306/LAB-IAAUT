@@ -84,38 +84,3 @@ def kmeans(X, K, flag):
                 C[k] = np.mean(cluster, axis=0)
 
     return C, s
-
-# RUN
-Ks = list(range(1, 21))       # K de 1 a 10
-n_runs = 20
-
-# matrizes vazias: linha = K, coluna = corrida
-custos_random = np.zeros((len(Ks), n_runs))
-custos_pp     = np.zeros((len(Ks), n_runs))
-
-for i, K in enumerate(Ks):
-    for r in range(n_runs):
-        C, s = kmeans(X_norm, K, 0)                   # random
-        custos_random[i, r] = kmeans_custo(X_norm, C, s)
-
-        C, s = kmeans(X_norm, K, 1)                   # k-means++
-        custos_pp[i, r] = kmeans_custo(X_norm, C, s)
-
-    print(f"K = {K} feito")                           # para veres o progresso
-
-min_random  = np.min(custos_random, axis=1)    # mínimo de cada linha: (10,)
-media_random = np.mean(custos_random, axis=1)
-std_random   = np.std(custos_random, axis=1)
-
-min_pp  = np.min(custos_pp, axis=1)
-media_pp = np.mean(custos_pp, axis=1)
-std_pp       = np.std(custos_pp, axis=1)
-
-plt.errorbar(Ks, media_random, yerr=std_random, fmt='o-', capsize=4, label='random')
-plt.errorbar(Ks, media_pp, yerr=std_pp, fmt='s-', capsize=4, label='k-means++')
-plt.xlabel('Número de centroides K')
-plt.ylabel('Custo médio')
-plt.xticks(Ks)
-plt.legend()
-plt.grid(True)
-plt.show()
