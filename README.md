@@ -1,3 +1,0 @@
-# LAB-IAAUT
-
-## Ribs Goat

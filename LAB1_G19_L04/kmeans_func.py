@@ -1,7 +1,11 @@
 import numpy as np
 import pandas as pd
-from sklearn.preprocessing import StandardScaler
 import matplotlib.pyplot as plt
+from sklearn.preprocessing import StandardScaler
+from sklearn.decomposition import PCA
+from sklearn.mixture import GaussianMixture
+from sklearn.metrics import silhouette_score
+
 # NAO MODIFICAR A SEED
 # flag = 0 --> random
 # flag = 1 --> km++
@@ -9,56 +13,60 @@ np.random.seed(555)
 
 df_train = pd.read_pickle('Xtrain.pkl')
 
+# todas as poses numa só matriz (8374, 66)
 X = np.concatenate(df_train['Skeleton_Sequence'].to_numpy())
 
-#Normalizaçao dos dados - centrar + escalamento (recomendando e crıtico para o PCA)
+# normalização
 scaler = StandardScaler()
 X_norm = scaler.fit_transform(X)
 
 def kminit(X, K, flag):
     N = X.shape[0]
     C = []
-    init_centr_idx= np.random.randint(N)
-    C.append(X[init_centr_idx])    
+    first_idx = np.random.randint(N)
+    C.append(X[first_idx])
+
     if flag == 0:
         idx = np.random.choice(N, K - 1, replace=False)
-        while init_centr_idx in idx: # caso raro --> repetiu o primeiro
+        while first_idx in idx:  # caso raro --> repetiu o primeiro
             idx = np.random.choice(N, K - 1, replace=False)
         C.extend(X[idx])
 
-    else: # k-means++
+    else:  # k-means++
         for _ in range(K - 1):
-            C_atual = np.array(C)                  
-            M = np.zeros((N, len(C_atual)))
+            C_current = np.array(C)
+            M = np.zeros((N, len(C_current)))
 
             # distância ao quadrado de cada pose a cada centroide já escolhido
-            for k in range(len(C_atual)):
-                M[:, k] = np.sum((X - C_atual[k])**2, axis=1)
+            for k in range(len(C_current)):
+                M[:, k] = np.sum((X - C_current[k])**2, axis=1)
 
             # distância de cada pose ao centroide MAIS PRÓXIMO: (N,)
-            d2 = np.min(M, axis=1)
+            min_sq_dist = np.min(M, axis=1)
 
             # probabilidade
-            prob = d2 / np.sum(d2)
+            prob = min_sq_dist / np.sum(min_sq_dist)
 
             new_idx = np.random.choice(N, p=prob)
             C.append(X[new_idx])
-                
+
     return np.array(C)
 
+
 def kmeans_custo(X, C, s):
-    centr_point = C[s]
+    assigned_centroids = C[s]
 
     # distância euclidiana de cada pose ao seu centroide: (N,)
-    dist_eucl = np.sum((X - centr_point)**2, axis=1)
+    sq_dist = np.sum((X - assigned_centroids)**2, axis=1)
 
-    total_cost= np.sum(dist_eucl)
+    total_cost = np.sum(sq_dist)
 
     return total_cost
 
+
 def kmeans(X, K, flag):
     # Aplica o algoritm k-means a matriz de dados X.
-    C = kminit(X,K,flag)
+    C = kminit(X, K, flag)
     prev_cost = np.inf
     N = X.shape[0]
 
@@ -66,9 +74,9 @@ def kmeans(X, K, flag):
         M = np.zeros((N, K))
 
         for k in range(K):
-            M[:, k] = np.sum((X - C[k])**2, axis=1)     # distância ao quadrado de cada pose ao centroide k: (N,)
+            M[:, k] = np.sum((X - C[k])**2, axis=1)  # distância ao quadrado de cada pose ao centroide k: (N,)
 
-        s = np.argmin(M, axis=1)                        # para cada pose, o centroide mais próximo
+        s = np.argmin(M, axis=1)  # para cada pose, o centroide mais próximo
 
         total_cost = kmeans_custo(X, C, s)
 
