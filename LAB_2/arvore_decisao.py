@@ -12,6 +12,10 @@ class ArvoreDecisao:
         def is_leaf_node(self):
             return self.valor is not None
 
+        @property                      
+        def value(self):             # alias de self.valor, necessário para a imprimir_arvore (usa no.value)
+            return self.valor 
+
     def __init__(self, profundidade_maxima=None):
         self.profundidade_maxima = profundidade_maxima
         self.raiz = None
