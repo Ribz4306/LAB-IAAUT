@@ -29,10 +29,34 @@ class MulticlassLogisticRegressionSGD:
                 prob = self._softmax(z)               
                 erro = prob - y_i                     
 
-                self.pesos = self.pesos - self.lr * np.outer(x, erro)   # W ← W − η·x·erroᵀ
-                self.offset = self.offset - self.lr * erro              # b ← b − η·erro
+                self.pesos = self.pesos - self.lr * np.outer(x, erro)   # W <- W − η·x·erroT
+                self.offset = self.offset - self.lr * erro              # b <- b − η·erro
+
+            Z = X @ self.pesos + self.offset
+            P = self._softmax(Z)
+            custo = -np.sum(Y * np.log(P + 1e-15))      # 1e-15 para evitar o log(0)
+            self.loss_history.append(custo)
 
 
     def predict(self, X):
-    #TO DO - IMPLEMENTAR A PREDIÇÃO DA REGRESSÃO LOGÍSTICA
-        pass
+        Z = X @ self.pesos + self.offset
+        return np.argmax(Z, axis=1) 
+
+if __name__ == "__main__":
+    # 1) Exemplo numérico feito à mão
+    m = MulticlassLogisticRegressionSGD(learning_rate=0.1, num_epocas=1)
+    m.fit(np.array([[2, 1]]), np.array([1]), num_classes=3)
+    print(m.pesos)
+    print(m.offset)
+    print(m.loss_history)
+
+    # 2) Dados de brincar: 3 grupos bem separados
+    X = np.array([[0, 0], [0.5, 0.2],      # classe 0: perto da origem
+                  [5, 0], [5.5, 0.3],      # classe 1: x₁ grande
+                  [0, 5], [0.2, 5.5]])     # classe 2: x₂ grande
+    y = np.array([0, 0, 1, 1, 2, 2])
+    m = MulticlassLogisticRegressionSGD(learning_rate=0.1, num_epocas=50)
+    m.fit(X, y, num_classes=3)
+    print(m.loss_history[:3], m.loss_history[-1])
+    print(m.predict(X))
+    print(m.predict(np.array([[4.8, 0.1], [0.1, 4.9], [0.3, 0.1]])))     
