@@ -33,8 +33,8 @@ Teste: E1=2, E2=5, E3=2, E4=1, E5=4. **Com tão poucas amostras, 1 erro numa cla
 | Árvore prof. 3 | 0,967 | 0,910 |
 
 - **Matriz**: tudo certo menos o E1. No treino há 7 E1 → E2 (e 1 E1 → E3), e no teste 1 dos 2 E1 → E2. E2, E3, E4 e E5 estão 100% certos.
-- **Comparação com a árvore**: no teste ficam praticamente empatados (0,90 contra 0,91). Erram de forma diferente: a árvore confunde E2 → E1 e E5 → E3, enquanto o NB só confunde E1 → E2. O NB tem treino mais baixo (0,911), logo **menos overfitting**: a diferença treino-teste é quase nula.
-- **Porque o NB falha no E1**: assume as 268 features independentes, dada a classe, o que é falso (os keypoints vizinhos estão muito correlacionados, por exemplo ombro/cotovelo/punho). O NB "conta várias vezes" a mesma informação. Como E1 e E2 são parecidos, essa contagem dupla puxa o E1 para o E2. Além disso há 268 features e só ~11 sequências por classe para estimar 2 parâmetros por feature.
+- **Comparação com a árvore**: no teste ficam praticamente empatados (0,90 contra 0,91). Erram de forma diferente: a árvore confunde E2 → E1 e E5 → E3, enquanto o NB só confunde E1 → E2. Com 14 sequências de teste, 0,01 é menos de um erro, por isso não dá para dizer que um é melhor (e a prof. 3 foi escolhida a olhar para o teste). O treino do NB mais baixo (0,911, 7 dos 18 E1 errados) é **viés** do modelo, não "pouco overfitting".
+- **Porque o NB falha no E1**: assume as 268 features independentes, dada a classe, o que é falso (os keypoints vizinhos estão muito correlacionados, por exemplo ombro/cotovelo/punho). O NB "conta várias vezes" a mesma informação. Como E1 e E2 são parecidos, essa contagem dupla puxa o E1 para o E2. Além disso há 268 features e só ~11 sequências por classe para estimar 2 parâmetros por feature. (É uma hipótese que não testámos: por exemplo, NB com menos features ou com PCA.)
 - Coerente com a 6: o BoP com K=5 dá o mesmo 0,900 no teste com o mesmo erro (1 E1 → E2).
 
 ## R6: Bag-of-Poses + NB
@@ -78,7 +78,8 @@ Código: para cada conjunto de features e cada lr treina um modelo, junta as 4 c
 - BoP: a 0,01 estabiliza em ~25 e não chega a zero, porque o E1 e o E2 não são separáveis e o custo tem um patamar. Com lr pequenos, 50 épocas não chegam para convergir (1e-5 fica em ~89).
 
 **Matrizes de confusão:**
-- Manuais: com lr pequeno o modelo ainda não convergiu (*underfitting*: o treino desce para 0,937 e 0,847) e as previsões puxam para a classe com mais amostras (E1). Com 1e-5 os 5 E2 de teste vão todos para E1. Com lr grande decora o treino. O melhor teste é lr 0,01 (0,76), mas fica sempre abaixo do NB e da árvore.
-- BoP: **as matrizes são iguais para todos os lr.** Explicação: partindo de W = 0, nas primeiras épocas os pesos crescem ~proporcionalmente ao lr, por isso a *direção* de W (que decide o argmax) é a mesma e só muda a *confiança* (o custo). E com 5 features, a fronteira linear fica logo definida. O limite é a representação (E1 = E2 nos histogramas), não o treino.
+- Manuais: com lr pequeno o modelo **ainda não convergiu** em 50 épocas (não é falta de capacidade; o treino desce para 0,937 e 0,847) e as previsões puxam para a classe com mais amostras (E1). Com 1e-5 os 5 E2 de teste vão todos para E1. Com lr grande decora o treino. O melhor teste é lr 0,01 (0,76), mas fica sempre abaixo do NB e da árvore.
+- BoP: **as matrizes são iguais para todos os lr.** Explicação: o E1 e o E2 caem quase todo no mesmo centróide (0,98 e 1,00), por isso depois de normalizados ficam no mesmo ponto e nenhuma fronteira linear os separa, seja qual for o lr. Decide o offset, que favorece o E1 (18 contra 15 no treino). As outras três classes separam-se logo nas primeiras épocas. O lr só muda a confiança (o custo). O limite é a representação, não o treino.
+- **O que não temos:** só traçámos o custo de treino. Para provar overfitting faltava a curva do custo no teste. Os gráficos usam eixo y logarítmico e o custo é a soma nas 56 amostras.
 
 **Conclusão até aqui:** para o paciente 4, os melhores modelos no teste são a árvore de prof. 3 (0,91), o NB com manuais e o NB com BoP K=5 (0,90). A regressão logística com manuais sofre de overfitting (268 features para 56 amostras). Com BoP não consegue separar E1/E2. O erro comum a todos é a confusão E1 ↔ E2.
